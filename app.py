@@ -128,6 +128,57 @@ def import_applications():
             "error": "Unable to process application dataset."
         }), 500
 
+@app.route("/api/applications/<job_id>", methods=["GET"])
+def get_application(job_id):
+    try:
+        data = load_dataset()
 
+        errors = validate_dataset(data)
+
+        if errors:
+            return jsonify({
+                "success": False,
+                "errors": errors
+            }), 400
+
+        jobs = data.get("jobs", [])
+        drafts = data.get("drafts", [])
+
+        job = next(
+            (job for job in jobs if job.get("id") == job_id),
+            None
+        )
+
+        if job is None:
+            return jsonify({
+                "success": False,
+                "error": "Application not found."
+            }), 404
+
+        linked_drafts = [
+            draft for draft in drafts
+            if draft.get("jobId") == job_id
+        ]
+
+        application = {
+            "id": job["id"],
+            "description": job["description"],
+            "type": job["type"],
+            "from": job["from"],
+            "to": job["to"],
+            "status": "Applied",
+            "drafts": linked_drafts
+        }
+
+        return jsonify({
+            "success": True,
+            "application": application
+        })
+
+    except Exception:
+        return jsonify({
+            "success": False,
+            "error": "Unable to retrieve application."
+        }), 500
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
