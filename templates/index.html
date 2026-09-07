@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CareerFlow AI</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #0b0f19;
+            color: #f5f7fb;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: min(1200px, 92%);
+            margin: auto;
+            padding: 32px 0;
+        }
+
+        header {
+            margin-bottom: 32px;
+        }
+
+        .brand {
+            font-size: 30px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #9ba4b5;
+            font-size: 15px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: #151b29;
+            border: 1px solid #273044;
+            border-radius: 14px;
+            padding: 22px;
+        }
+
+        .stat-label {
+            color: #9ba4b5;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .section-title {
+            font-size: 21px;
+            margin-bottom: 16px;
+        }
+
+        #applications {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .application-card {
+            background: #151b29;
+            border: 1px solid #273044;
+            border-radius: 14px;
+            padding: 22px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .application-card:hover {
+            transform: translateY(-2px);
+            border-color: #596780;
+        }
+
+        .job-title {
+            font-size: 19px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .job-description {
+            color: #aeb7c7;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+
+        .details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .tag {
+            background: #20283a;
+            color: #c9d1df;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 20px;
+            background: #173522;
+            color: #83d99c;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .draft-count {
+            margin-top: 14px;
+            color: #9ba4b5;
+            font-size: 13px;
+        }
+
+        .loading {
+            color: #9ba4b5;
+            padding: 30px 0;
+        }
+
+        .error {
+            background: #351b20;
+            border: 1px solid #68313b;
+            color: #ffb8c0;
+            padding: 16px;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 750px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            #applications {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+        <div class="brand">CareerFlow AI</div>
+        <div class="subtitle">
+            Your AI-powered career application copilot
+        </div>
+    </header>
+
+    <section class="stats">
+
+        <div class="stat-card">
+            <div class="stat-label">Applications</div>
+            <div class="stat-value" id="applicationCount">—</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Interviews</div>
+            <div class="stat-value" id="interviewCount">—</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Offers</div>
+            <div class="stat-value" id="offerCount">—</div>
+        </div>
+
+    </section>
+
+    <section>
+        <h2 class="section-title">Applications</h2>
+
+        <div id="applications">
+            <div class="loading">
+                Loading applications...
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+
+async function loadApplications() {
+
+    const container = document.getElementById("applications");
+
+    try {
+
+        const response = await fetch("/api/import", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error("Unable to load application data.");
+        }
+
+        const applications = data.applications;
+
+        updateStats(applications);
+
+        container.innerHTML = "";
+
+        if (applications.length === 0) {
+            container.innerHTML = `
+                <div class="loading">
+                    No applications found.
+                </div>
+            `;
+            return;
+        }
+
+        applications.forEach(application => {
+
+            const card = document.createElement("div");
+
+            card.className = "application-card";
+
+            card.innerHTML = `
+                <div class="job-title">
+                    ${escapeHtml(application.description)}
+                </div>
+
+                <div class="details">
+
+                    <span class="tag">
+                        ${escapeHtml(application.type)}
+                    </span>
+
+                    <span class="tag">
+                        ${escapeHtml(application.from)}
+                    </span>
+
+                    <span class="tag">
+                        ${escapeHtml(application.to)}
+                    </span>
+
+                </div>
+
+                <span class="status">
+                    ${escapeHtml(application.status)}
+                </span>
+
+                <div class="draft-count">
+                    ${application.drafts.length} linked draft(s)
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+
+    } catch (error) {
+
+        container.innerHTML = `
+            <div class="error">
+                ${escapeHtml(error.message)}
+            </div>
+        `;
+    }
+}
+
+
+function updateStats(applications) {
+
+    document.getElementById("applicationCount").textContent =
+        applications.length;
+
+    document.getElementById("interviewCount").textContent =
+        applications.filter(app => app.status === "Interview").length;
+
+    document.getElementById("offerCount").textContent =
+        applications.filter(app => app.status === "Offer").length;
+}
+
+
+function escapeHtml(value) {
+
+    const div = document.createElement("div");
+
+    div.textContent = value ?? "";
+
+    return div.innerHTML;
+}
+
+
+loadApplications();
+
+</script>
+
+</body>
+</html>
