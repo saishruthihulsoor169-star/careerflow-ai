@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>CareerFlow AI</title>
 
     <style>
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -82,25 +89,21 @@
             border: 1px solid #273044;
             border-radius: 14px;
             padding: 22px;
-            transition: transform 0.2s, border-color 0.2s;
+            cursor: pointer;
+            transition:
+                transform 0.2s,
+                border-color 0.2s;
         }
 
         .application-card:hover {
-            transform: translateY(-2px);
-            border-color: #596780;
+            transform: translateY(-3px);
+            border-color: #68758d;
         }
 
         .job-title {
             font-size: 19px;
             font-weight: 600;
             margin-bottom: 12px;
-        }
-
-        .job-description {
-            color: #aeb7c7;
-            font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: 18px;
         }
 
         .details {
@@ -147,229 +150,7 @@
             border-radius: 10px;
         }
 
-        @media (max-width: 750px) {
-            .stats {
-                grid-template-columns: 1fr;
-            }
-
-            #applications {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="container">
-
-    <header>
-        <div class="brand">CareerFlow AI</div>
-        <div class="subtitle">
-            Your AI-powered career application copilot
-        </div>
-    </header>
-
-    <section class="stats">
-
-        <div class="stat-card">
-            <div class="stat-label">Applications</div>
-            <div class="stat-value" id="applicationCount">—</div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-label">Interviews</div>
-            <div class="stat-value" id="interviewCount">—</div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-label">Offers</div>
-            <div class="stat-value" id="offerCount">—</div>
-        </div>
-
-    </section>
-
-    <section>
-        <h2 class="section-title">Applications</h2>
-
-        <div id="applications">
-            <div class="loading">
-                Loading applications...
-            </div>
-        </div>
-    </section>
-
-</div>
-
-<script>
-
-async function loadApplications() {
-
-    const container = document.getElementById("applications");
-
-    try {
-
-        const response = await fetch("/api/import", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-            throw new Error("Unable to load application data.");
-        }
-
-        const applications = data.applications;
-
-        updateStats(applications);
-
-        container.innerHTML = "";
-
-        if (applications.length === 0) {
-            container.innerHTML = `
-                <div class="loading">
-                    No applications found.
-                </div>
-            `;
-            return;
-        }
-
-        applications.forEach(application => {
-
-            const card = document.createElement("div");
-
-            card.className = "application-card";
-
-            card.addEventListener("click", () => {
-                 openApplication(application.id);
-            });
-
-
-            card.innerHTML = `
-                <div class="job-title">
-                    ${escapeHtml(application.description)}
-                </div>
-
-                <div class="details">
-
-                    <span class="tag">
-                        ${escapeHtml(application.type)}
-                    </span>
-
-                    <span class="tag">
-                        ${escapeHtml(application.from)}
-                    </span>
-
-                    <span class="tag">
-                        ${escapeHtml(application.to)}
-                    </span>
-
-                </div>
-
-                <span class="status">
-                    ${escapeHtml(application.status)}
-                </span>
-
-                <div class="draft-count">
-                    ${application.drafts.length} linked draft(s)
-                </div>
-            `;
-
-            container.appendChild(card);
-        });
-
-    } catch (error) {
-
-        container.innerHTML = `
-            <div class="error">
-                ${escapeHtml(error.message)}
-            </div>
-        `;
-    }
-}
-
-
-function updateStats(applications) {
-
-    document.getElementById("applicationCount").textContent =
-        applications.length;
-
-    document.getElementById("interviewCount").textContent =
-        applications.filter(app => app.status === "Interview").length;
-
-    document.getElementById("offerCount").textContent =
-        applications.filter(app => app.status === "Offer").length;
-}
-
-
-function escapeHtml(value) {
-
-    const div = document.createElement("div");
-
-    div.textContent = value ?? "";
-
-    return div.innerHTML;
-}
-
-async function openApplication(jobId) {
-
-    try {
-
-        const response = await fetch(
-            `/api/applications/${encodeURIComponent(jobId)}`
-        );
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-            throw new Error(
-                data.error || "Unable to open application."
-            );
-        }
-
-        const application = data.application;
-
-        let draftHtml = "";
-
-        if (application.drafts.length === 0) {
-
-            draftHtml = `
-                <p>No linked drafts available.</p>
-            `;
-
-        } else {
-
-            application.drafts.forEach(draft => {
-
-                draftHtml += `
-                    <div style="
-                        margin-top: 12px;
-                        padding: 12px;
-                        background: #20283a;
-                        border-radius: 10px;
-                    ">
-                        <strong>
-                            ${escapeHtml(draft.type)}
-                        </strong>
-
-                        <p style="
-                            margin-top: 8px;
-                            color: #b8c1d1;
-                            line-height: 1.5;
-                        ">
-                            ${escapeHtml(draft.contents)}
-                        </p>
-                    </div>
-                `;
-            });
-        }
-
-        const details = document.createElement("div");
-
-        details.style.cssText = `
+        .modal-overlay {
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.75);
@@ -378,107 +159,526 @@ async function openApplication(jobId) {
             justify-content: center;
             padding: 20px;
             z-index: 1000;
+        }
+
+        .modal {
+            background: #151b29;
+            border: 1px solid #273044;
+            border-radius: 16px;
+            width: min(700px, 100%);
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 28px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            line-height: 1.4;
+        }
+
+        .close-button {
+            background: transparent;
+            color: white;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+        }
+
+        .modal-section {
+            margin-top: 24px;
+        }
+
+        .modal-section h3 {
+            margin-bottom: 12px;
+        }
+
+        .draft {
+            margin-top: 12px;
+            padding: 14px;
+            background: #20283a;
+            border-radius: 10px;
+        }
+
+        .draft-type {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .draft-content {
+            color: #b8c1d1;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 750px) {
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            #applications {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <header>
+
+        <div class="brand">
+            CareerFlow AI
+        </div>
+
+        <div class="subtitle">
+            Your AI-powered career application copilot
+        </div>
+
+    </header>
+
+
+    <section class="stats">
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Applications
+            </div>
+
+            <div
+                class="stat-value"
+                id="applicationCount"
+            >
+                —
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Interviews
+            </div>
+
+            <div
+                class="stat-value"
+                id="interviewCount"
+            >
+                —
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Offers
+            </div>
+
+            <div
+                class="stat-value"
+                id="offerCount"
+            >
+                —
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section>
+
+        <h2 class="section-title">
+            Applications
+        </h2>
+
+        <div id="applications">
+
+            <div class="loading">
+                Loading applications...
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<script>
+
+async function loadApplications() {
+
+    const container =
+        document.getElementById("applications");
+
+    try {
+
+        const response = await fetch(
+            "/api/import",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+
+            throw new Error(
+                data.error ||
+                "Unable to load application data."
+            );
+        }
+
+        const applications =
+            data.applications;
+
+        updateStats(applications);
+
+        container.innerHTML = "";
+
+        if (applications.length === 0) {
+
+            container.innerHTML = `
+                <div class="loading">
+                    No applications found.
+                </div>
+            `;
+
+            return;
+        }
+
+        applications.forEach(
+            application => {
+
+                const card =
+                    document.createElement("div");
+
+                card.className =
+                    "application-card";
+
+                card.addEventListener(
+                    "click",
+                    () => {
+                        openApplication(
+                            application.id
+                        );
+                    }
+                );
+
+                card.innerHTML = `
+
+                    <div class="job-title">
+                        ${escapeHtml(
+                            application.description
+                        )}
+                    </div>
+
+                    <div class="details">
+
+                        <span class="tag">
+                            ${escapeHtml(
+                                application.type
+                            )}
+                        </span>
+
+                        <span class="tag">
+                            ${escapeHtml(
+                                application.from
+                            )}
+                        </span>
+
+                        <span class="tag">
+                            ${escapeHtml(
+                                application.to
+                            )}
+                        </span>
+
+                    </div>
+
+                    <span class="status">
+                        ${escapeHtml(
+                            application.status
+                        )}
+                    </span>
+
+                    <div class="draft-count">
+
+                        ${application.drafts.length}
+                        linked draft(s)
+
+                    </div>
+
+                `;
+
+                container.appendChild(card);
+
+            }
+        );
+
+    } catch (error) {
+
+        container.innerHTML = `
+
+            <div class="error">
+
+                ${escapeHtml(
+                    error.message
+                )}
+
+            </div>
+
         `;
 
-        details.innerHTML = `
-            <div style="
-                background: #151b29;
-                border: 1px solid #273044;
-                border-radius: 16px;
-                width: min(700px, 100%);
-                max-height: 85vh;
-                overflow-y: auto;
-                padding: 28px;
-            ">
+    }
 
-                <div style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 20px;
-                ">
+}
 
-                    <h2>
-                        ${escapeHtml(application.description)}
+
+function updateStats(applications) {
+
+    document.getElementById(
+        "applicationCount"
+    ).textContent =
+        applications.length;
+
+    document.getElementById(
+        "interviewCount"
+    ).textContent =
+        applications.filter(
+            app => app.status === "Interview"
+        ).length;
+
+    document.getElementById(
+        "offerCount"
+    ).textContent =
+        applications.filter(
+            app => app.status === "Offer"
+        ).length;
+
+}
+
+
+async function openApplication(jobId) {
+
+    try {
+
+        const response = await fetch(
+            `/api/applications/${encodeURIComponent(
+                jobId
+            )}`
+        );
+
+        const data =
+            await response.json();
+
+        if (!response.ok || !data.success) {
+
+            throw new Error(
+                data.error ||
+                "Unable to open application."
+            );
+        }
+
+        const application =
+            data.application;
+
+        let draftHtml = "";
+
+        if (application.drafts.length === 0) {
+
+            draftHtml = `
+                <p class="loading">
+                    No linked drafts available.
+                </p>
+            `;
+
+        } else {
+
+            application.drafts.forEach(
+                draft => {
+
+                    draftHtml += `
+
+                        <div class="draft">
+
+                            <div class="draft-type">
+                                ${escapeHtml(
+                                    draft.type
+                                )}
+                            </div>
+
+                            <div class="draft-content">
+                                ${escapeHtml(
+                                    draft.contents
+                                )}
+                            </div>
+
+                        </div>
+
+                    `;
+
+                }
+            );
+
+        }
+
+        const overlay =
+            document.createElement("div");
+
+        overlay.className =
+            "modal-overlay";
+
+        overlay.innerHTML = `
+
+            <div class="modal">
+
+                <div class="modal-header">
+
+                    <h2 class="modal-title">
+                        ${escapeHtml(
+                            application.description
+                        )}
                     </h2>
 
-                    <button id="closeDetails"
-                        style="
-                            background: transparent;
-                            color: white;
-                            border: none;
-                            font-size: 24px;
-                            cursor: pointer;
-                        ">
+                    <button
+                        class="close-button"
+                        id="closeDetails"
+                        aria-label="Close"
+                    >
                         ×
                     </button>
 
                 </div>
 
+
                 <div class="details">
 
                     <span class="tag">
-                        ${escapeHtml(application.type)}
+                        ${escapeHtml(
+                            application.type
+                        )}
                     </span>
 
                     <span class="tag">
-                        ${escapeHtml(application.from)}
+                        ${escapeHtml(
+                            application.from
+                        )}
                     </span>
 
                     <span class="tag">
-                        ${escapeHtml(application.to)}
+                        ${escapeHtml(
+                            application.to
+                        )}
                     </span>
 
                 </div>
 
-                <div style="margin: 20px 0;">
 
-                    <strong>Status</strong>
+                <div class="modal-section">
 
-                    <div style="margin-top: 10px;">
-                        <span class="status">
-                            ${escapeHtml(application.status)}
-                        </span>
-                    </div>
+                    <h3>
+                        Current Status
+                    </h3>
+
+                    <span class="status">
+                        ${escapeHtml(
+                            application.status
+                        )}
+                    </span>
 
                 </div>
 
-                <div>
 
-                    <h3>Linked Documents</h3>
+                <div class="modal-section">
+
+                    <h3>
+                        Linked Documents
+                    </h3>
 
                     ${draftHtml}
 
                 </div>
 
             </div>
+
         `;
 
-        document.body.appendChild(details);
+        document.body.appendChild(
+            overlay
+        );
+
 
         document
             .getElementById("closeDetails")
-            .addEventListener("click", () => {
-                details.remove();
-            });
+            .addEventListener(
+                "click",
+                () => {
+                    overlay.remove();
+                }
+            );
 
-        details.addEventListener("click", (event) => {
 
-            if (event.target === details) {
-                details.remove();
+        overlay.addEventListener(
+            "click",
+            event => {
+
+                if (
+                    event.target === overlay
+                ) {
+                    overlay.remove();
+                }
+
             }
-
-        });
+        );
 
     } catch (error) {
 
         alert(error.message);
 
     }
+
 }
+
+
+function escapeHtml(value) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        value ?? "";
+
+    return div.innerHTML;
+
+}
+
+
 loadApplications();
 
 </script>
 
 </body>
+
 </html>
