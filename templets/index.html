@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerFlow AI</title>
+</head>
+
+<body>
+
+    <h1>CareerFlow AI</h1>
+
+    <p>Your AI Career Execution Copilot</p>
+
+    <p id="status">Checking system...</p>
+
+    <script>
+        fetch("/api/health")
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("status").textContent =
+                    data.service + " is " + data.status;
+            })
+            .catch(() => {
+                document.getElementById("status").textContent =
+                    "Service unavailable";
+            });
+    </script>
+
+</body>
+</html>
