@@ -1,0 +1,41 @@
+{
+  "jobs": [
+    {
+      "id": "job_001",
+      "from": "2026-06-01",
+      "to": "2026-06-30",
+      "type": "full-time",
+      "description": "Senior Backend Engineer - Python, Bengaluru"
+    },
+    {
+      "id": "job_002",
+      "from": "2026-06-10",
+      "to": "2026-07-10",
+      "type": "contract",
+      "description": "Data Platform Engineer - streaming pipelines"
+    },
+    {
+      "id": "job_003",
+      "from": "2026-06-15",
+      "to": "2026-07-15",
+      "type": "full-time",
+      "description": "Machine Learning Engineer - Bengaluru"
+    }
+  ],
+  "drafts": [
+    {
+      "id": "draft_001",
+      "jobId": "job_001",
+      "type": "cover_letter",
+      "contents": "Dear Hiring Manager, I am applying for the Senior Backend Engineer position.",
+      "status": "draft"
+    },
+    {
+      "id": "draft_002",
+      "jobId": "job_002",
+      "type": "follow_up_email",
+      "contents": "Following up on my application from June 12.",
+      "status": "sent"
+    }
+  ]
+}
